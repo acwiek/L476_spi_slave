@@ -23,6 +23,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <errno.h>
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -100,16 +101,33 @@ int main(void)
   MX_USART2_UART_Init();
   MX_SPI2_Init();
   /* USER CODE BEGIN 2 */
-
+  uint8_t rx_spi_buff[512] = {0xFF};
+  uint8_t tx_spi_buff[512] = {0x55};
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+
+    HAL_StatusTypeDef hstatus;
+    hstatus = HAL_SPI_TransmitReceive(&hspi2, tx_spi_buff, rx_spi_buff, 1, 5000);
+//    hstatus = HAL_SPI_Receive_IT(&hspi2, rx_spi_buff, sizeof(rx_spi_buff));
+    if (hstatus == HAL_OK) {
+      //uint32_t lenght = sizeof(rx_spi_buff) - __HAL_DMA_GET_COUNTER(hspi2.hdmarx);
+//      printf("received %ld bytes\n", lenght);
+//      for(int i=0; i<lenght; i++) {
+//        printf("0x%x ", rx_spi_buff[i]);
+//      }
+      printf("data %d\n", rx_spi_buff[0]);
+      memset(rx_spi_buff, 0, sizeof(rx_spi_buff));
+    }
+    else {
+      ;//printf("failed\n");
+    }
+
+    //HAL_Delay(500);
     /* USER CODE END WHILE */
-    HAL_Delay(500);
-    printf("test\n");
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -184,7 +202,7 @@ static void MX_SPI2_Init(void)
   hspi2.Init.DataSize = SPI_DATASIZE_8BIT;
   hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
-  hspi2.Init.NSS = SPI_NSS_SOFT;
+  hspi2.Init.NSS = SPI_NSS_HARD_INPUT;
   hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
