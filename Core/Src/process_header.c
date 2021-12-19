@@ -19,6 +19,9 @@ uint8_t *get_header() {
   return header;
 }
 
+void set_state(enum state val) {
+  state_machine = val;
+}
 
 enum state get_state(uint8_t val) {
   //  phy->iobuf[0] = (in ? 0x80 : 0) | (transfer_len - 1);
@@ -41,7 +44,7 @@ enum state get_state(uint8_t val) {
     // captured in STATE_IDLE
     header[header_it] = val;
     header_it = header_it + 1;
-    if (header_it > 4 - 1) {
+    if (header_it > (4 - 1)) {
       state_machine = STATE_TRANSMIT;
       header_it = 0;
     }

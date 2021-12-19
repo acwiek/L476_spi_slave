@@ -83,6 +83,20 @@ int get() {
   return ret;
 }
 
+int transmit(uint8_t input) {
+  int ret = -1;
+  uint8_t rx_data = 0;
+  HAL_StatusTypeDef hstatus = HAL_SPI_TransmitReceive(&hspi2, &input, &rx_data, 1, 5000);
+  if (hstatus == HAL_OK) {
+    ret = rx_spi_buff[0];
+  }
+  else {
+    printf("failed\n");
+  }
+
+  return ret;
+}
+
 
 /* USER CODE END 0 */
 
@@ -133,9 +147,26 @@ int main(void)
 
     enum state st = get_state(val);
     if (st == STATE_TRANSMIT) {
-      printf("header verification...\n");
+//      printf("header verification...\n");
       uint8_t *header = get_header();
-      printf("header %d %d %d %d\n", header[0], header[1], header[2], header[3]);
+//      printf("header %d %d %d %d\n", header[0], header[1], header[2], header[3]);
+
+
+      // flow controll
+      int val = transmit(1);
+
+      printf("%d flow controll\n", val);
+
+      // flow controll
+      val = transmit(2);
+      printf("%d flow controll\n", val);
+
+//      // tramsit
+//      val = transmit(0x80);
+//      printf("%d transmit\n", val);
+//
+//      set_state(STATE_IDLE);
+
     }
 
   }
