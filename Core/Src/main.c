@@ -62,11 +62,27 @@ static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_SPI2_Init(void);
 /* USER CODE BEGIN PFP */
-
+uint8_t rx_spi_buff[512] = {0};
+uint8_t tx_spi_buff[512] = {128};
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+#include "process_header.h"
+
+int get() {
+  int ret = -1;
+  HAL_StatusTypeDef hstatus = HAL_SPI_Receive(&hspi2, rx_spi_buff, 1, 5000);
+  if (hstatus == HAL_OK) {
+    ret = rx_spi_buff[0];
+  }
+  else {
+    printf("failed\n");
+  }
+
+  return ret;
+}
+
 
 /* USER CODE END 0 */
 
@@ -101,17 +117,35 @@ int main(void)
   MX_USART2_UART_Init();
   MX_SPI2_Init();
   /* USER CODE BEGIN 2 */
-  uint8_t rx_spi_buff[512] = {0xFF};
-  uint8_t tx_spi_buff[512] = {0x55};
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
+
+
+
+  while (1) {
+    int val = get();
+
+    printf("data %d\n", val);
+
+    enum state st = get_state(val);
+    if (st == STATE_TRANSMIT) {
+      printf("header verification...\n");
+      uint8_t *header = get_header();
+      printf("header %d %d %d %d\n", header[0], header[1], header[2], header[3]);
+    }
+
+  }
+
   while (1)
   {
 
     HAL_StatusTypeDef hstatus;
-    hstatus = HAL_SPI_TransmitReceive(&hspi2, tx_spi_buff, rx_spi_buff, 1, 5000);
+//    hstatus = HAL_SPI_TransmitReceive(&hspi2, tx_spi_buff, rx_spi_buff, 1, 5000);
+    hstatus = HAL_SPI_Receive(&hspi2, rx_spi_buff, 1, 5000);
 //    hstatus = HAL_SPI_Receive_IT(&hspi2, rx_spi_buff, sizeof(rx_spi_buff));
     if (hstatus == HAL_OK) {
       //uint32_t lenght = sizeof(rx_spi_buff) - __HAL_DMA_GET_COUNTER(hspi2.hdmarx);
