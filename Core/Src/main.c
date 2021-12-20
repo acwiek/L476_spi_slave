@@ -163,7 +163,7 @@ int main(void)
       }
 
 //      printf("header %x %x %x %x\n", header[0], header[1], header[2], header[3]);
-      printf("addr %lx size %d dir: %d\n", tpm_command->addr, tpm_command->size, tpm_command->rw);
+      printf("addr 0x%lx size %d dir: %s\n", tpm_command->addr, tpm_command->size, tpm_command->rw ? "read" : "write");
 
       if (tpm_command->rw == WRITE_REQ) {
         printf("received data %x\n", data);
