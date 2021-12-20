@@ -143,24 +143,37 @@ int main(void)
   while (1) {
     int val = receive();
     if (val == -1) {
-//      printf("error val == -1\n");
+      // no new data
       set_state(STATE_IDLE);
       continue;
     }
 
-//    printf("data: %x\n", val);
-
     enum state st = get_state(val);
     if (st == STATE_TRANSMIT) {
-      uint16_t data = 128 | 16; //0x80;
-      transmit((uint8_t *)&data, 1);
-      set_state(STATE_IDLE);
+
       uint8_t *header = get_header();
       struct cmd *tpm_command = get_command();
+      uint16_t data = 0;
 
-      printf("header %x %x %x %x\n", header[0], header[1], header[2], header[3]);
-//      printf("addr %x size %d\n", tpm_command->cmd_addr, tpm_command->cmd_size);
+      if (tpm_command->rw == WRITE_REQ) {
+        data = receive();
+      } else {
+        data = 0x80;
+        transmit((uint8_t *)&data, 1);
+      }
 
+//      printf("header %x %x %x %x\n", header[0], header[1], header[2], header[3]);
+      printf("addr %lx size %d dir: %d\n", tpm_command->addr, tpm_command->size, tpm_command->rw);
+
+      if (tpm_command->rw == WRITE_REQ) {
+        printf("received data %x\n", data);
+      } else {
+        printf("sent data %x\n", data);
+      }
+
+      printf("\n");
+
+      set_state(STATE_IDLE);
     }
     /* USER CODE END WHILE */
     /* USER CODE BEGIN 3 */

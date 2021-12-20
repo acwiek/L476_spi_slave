@@ -10,19 +10,21 @@
 
 enum state {
     STATE_IDLE,
-    STATE_HEADER_RECEIVE,
     STATE_FLOW_CONTROL,
     STATE_TRANSMIT
 };
 
+typedef enum {READ_REQ, WRITE_REQ} cmd_dir;
+
 struct cmd {
-  size_t cmd_size;
-  uint32_t cmd_addr;
+  cmd_dir rw;
+  size_t size;
+  uint32_t addr;
 };
+
 
 enum state get_state(uint8_t val);
 uint8_t *get_header();
-
 
 
 #endif /* SRC_PROCESS_HEADER_H_ */

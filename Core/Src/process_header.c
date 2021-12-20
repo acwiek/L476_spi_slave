@@ -48,16 +48,6 @@ enum state get_state(uint8_t val) {
   case STATE_IDLE:
     // waiting for the beginning of the header
     // if input value != 0 start filling header buffer
-    if (val != 0) {
-      header[header_it] = val;
-      header_it = header_it + 1;
-      state_machine = STATE_HEADER_RECEIVE;
-    }
-    break;
-
-  case STATE_HEADER_RECEIVE:
-    // first value of the potential header was
-    // captured in STATE_IDLE
     header[header_it] = val;
     header_it = header_it + 1;
     if (header_it > (4 - 1)) {
@@ -65,18 +55,16 @@ enum state get_state(uint8_t val) {
       uint8_t *header = get_header();
 
       if (header[0] > 0x7F) {
-        // read
-        tpm_command.cmd_size = (header[0] - 0x80) + 1;
+        tpm_command.rw = READ_REQ;
+        tpm_command.size = (header[0] - 0x80) + 1;
       } else {
-        // write
-        tpm_command.cmd_size = header[0] + 1;
+        tpm_command.rw = WRITE_REQ;
+        tpm_command.size = header[0] + 1;
       }
 
-      tpm_command.cmd_addr = (header[1] << 16L) + (header[2] << 8L) + header[3];
+      tpm_command.addr = (header[1] << 16L) + (header[2] << 8L) + header[3];
 
-//      printf("0%x", header[0]);
       state_machine = STATE_FLOW_CONTROL;
-
     }
     break;
 
