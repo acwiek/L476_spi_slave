@@ -63,35 +63,36 @@ static void MX_USART2_UART_Init(void);
 static void MX_SPI2_Init(void);
 /* USER CODE BEGIN PFP */
 uint8_t rx_spi_buff[512] = {0};
-uint8_t tx_spi_buff[512] = {128};
+uint8_t tx_spi_buff[512] = {0};
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 #include "process_header.h"
 
-int get() {
+int receive() {
   int ret = -1;
-  HAL_StatusTypeDef hstatus = HAL_SPI_Receive(&hspi2, rx_spi_buff, 1, 5000);
+  HAL_StatusTypeDef hstatus = HAL_SPI_Receive(&hspi2, rx_spi_buff, 1, 500);
   if (hstatus == HAL_OK) {
     ret = rx_spi_buff[0];
   }
   else {
-    printf("failed\n");
+//    printf("failed\n");
   }
 
   return ret;
 }
 
-int transmit(uint8_t input) {
+int transmit(uint8_t *input, size_t size) {
   int ret = -1;
   uint8_t rx_data = 0;
-  HAL_StatusTypeDef hstatus = HAL_SPI_TransmitReceive(&hspi2, &input, &rx_data, 1, 5000);
+  HAL_StatusTypeDef hstatus = HAL_SPI_TransmitReceive(&hspi2, input, &rx_data, size, 500);
   if (hstatus == HAL_OK) {
     ret = rx_spi_buff[0];
   }
   else {
-    printf("failed\n");
+  ;
+//    printf("failed\n");
   }
 
   return ret;
@@ -137,61 +138,30 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-
-
+  register_transmit_callback(transmit);
 
   while (1) {
-    int val = get();
+    int val = receive();
+    if (val == -1) {
+//      printf("error val == -1\n");
+      set_state(STATE_IDLE);
+      continue;
+    }
 
-    printf("data %d\n", val);
+//    printf("data: %x\n", val);
 
     enum state st = get_state(val);
     if (st == STATE_TRANSMIT) {
-//      printf("header verification...\n");
+      uint16_t data = 128 | 16; //0x80;
+      transmit((uint8_t *)&data, 1);
+      set_state(STATE_IDLE);
       uint8_t *header = get_header();
-//      printf("header %d %d %d %d\n", header[0], header[1], header[2], header[3]);
+      struct cmd *tpm_command = get_command();
 
-
-      // flow controll
-      int val = transmit(1);
-
-      printf("%d flow controll\n", val);
-
-      // flow controll
-      val = transmit(2);
-      printf("%d flow controll\n", val);
-
-//      // tramsit
-//      val = transmit(0x80);
-//      printf("%d transmit\n", val);
-//
-//      set_state(STATE_IDLE);
+      printf("header %x %x %x %x\n", header[0], header[1], header[2], header[3]);
+//      printf("addr %x size %d\n", tpm_command->cmd_addr, tpm_command->cmd_size);
 
     }
-
-  }
-
-  while (1)
-  {
-
-    HAL_StatusTypeDef hstatus;
-//    hstatus = HAL_SPI_TransmitReceive(&hspi2, tx_spi_buff, rx_spi_buff, 1, 5000);
-    hstatus = HAL_SPI_Receive(&hspi2, rx_spi_buff, 1, 5000);
-//    hstatus = HAL_SPI_Receive_IT(&hspi2, rx_spi_buff, sizeof(rx_spi_buff));
-    if (hstatus == HAL_OK) {
-      //uint32_t lenght = sizeof(rx_spi_buff) - __HAL_DMA_GET_COUNTER(hspi2.hdmarx);
-//      printf("received %ld bytes\n", lenght);
-//      for(int i=0; i<lenght; i++) {
-//        printf("0x%x ", rx_spi_buff[i]);
-//      }
-      printf("data %d\n", rx_spi_buff[0]);
-      memset(rx_spi_buff, 0, sizeof(rx_spi_buff));
-    }
-    else {
-      ;//printf("failed\n");
-    }
-
-    //HAL_Delay(500);
     /* USER CODE END WHILE */
     /* USER CODE BEGIN 3 */
   }
